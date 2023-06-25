@@ -1,29 +1,31 @@
 import { execScript } from 'utools-utils/preload'
 
-function beforeExec(app: string, script: string) {
+function ensureAppActivated(app: string, script: string) {
   return `
     tell application "System Events"
       if (name of processes) does not contain "${app}" then
-        tell application "YesPlayMusic"
+        tell application "${app}"
           activate
         end tell
         repeat until application "${app}" is running
         end repeat
         delay 0.5
       end if
-
-      tell process "${app}"
-        ${script}
-      end tell
-    end tell`
+    end tell
+    
+    ${script}`
 }
 
 async function runControl(menuItem: string) {
   const script = `
-    tell menu "Controls" of menu bar item "Controls" of menu bar 1
-      click menu item ${menuItem}
+    tell application "System Events"
+      tell process "YesPlayMusic"
+        tell menu "Controls" of menu bar item "Controls" of menu bar 1
+          click menu item ${menuItem}
+        end tell
+      end tell
     end tell`
-  await execScript(beforeExec('YesPlayMusic', script))
+  await execScript(ensureAppActivated('YesPlayMusic', script))
 }
 
 export async function playPause() {
@@ -69,5 +71,5 @@ export async function toggleLyric() {
         end tell
       end if
     end tell`
-  await execScript(script)
+  await execScript(ensureAppActivated('YesPlayMusic', script))
 }
